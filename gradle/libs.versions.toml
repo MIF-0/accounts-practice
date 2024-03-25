@@ -1,0 +1,30 @@
+[versions]
+# logs
+logback = "1.5.3"
+slf4j = "2.0.12"
+
+#Test
+jUnit = "5.10.2"
+assertJ = "3.25.3"
+mockito = "5.7.0"
+
+spotless = "6.25.0"
+
+[libraries]
+slf4j-api = { group = "org.slf4j", name = "slf4j-api", version.ref = "slf4j" }
+logback-classic = { group = "ch.qos.logback", name = "logback-classic", version.ref = "logback" }
+logback-core = { group = "ch.qos.logback", name = "logback-core", version.ref = "logback" }
+
+
+jUnit-bom = { group = "org.junit", name = "junit-bom", version.ref = "jUnit" }
+jUnit-jupiter = { group = "org.junit.jupiter", name = "Function…", version.ref = "jUnit" }
+assertj-core = { group = "org.assertj", name ="assertj-core", version.ref = "assertJ" }
+mockito-core = { group = "org.mockito", name = "mockito-core", version.ref = "mockito" }
+mockito-jupiter = { group = "org.mockito", name = "mockito-junit-jupiter", version.ref = "mockito" }
+
+[bundles]
+logDependencies = ["slf4j-api", "logback-core", "logback-classic"]
+testDependencies = ["jUnit-jupiter", "assertj-core", "mockito-core", "mockito-jupiter"]
+
+[plugins]
+spotless = { id = "com.diffplug.spotless", version.ref = "spotless" }
