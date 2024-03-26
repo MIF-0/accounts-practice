@@ -27,6 +27,7 @@ subprojects {
 
     dependencies {
         implementation(libs.bundles.logDependencies)
+
         testImplementation(platform(libs.jUnit.bom))
         testImplementation(libs.bundles.testDependencies)
     }

@@ -3,6 +3,10 @@
 logback = "1.5.3"
 slf4j = "2.0.12"
 
+#web
+helidon = "4.0.6"
+shadow = "8.1.1"
+
 #Test
 jUnit = "5.10.2"
 assertJ = "3.25.3"
@@ -15,6 +19,12 @@ slf4j-api = { group = "org.slf4j", name = "slf4j-api", version.ref = "slf4j" }
 logback-classic = { group = "ch.qos.logback", name = "logback-classic", version.ref = "logback" }
 logback-core = { group = "ch.qos.logback", name = "logback-core", version.ref = "logback" }
 
+helidon-bom = { group = "io.helidon", name = "helidon-dependencies", version.ref="helidon"}
+helidon-web = { group = "io.helidon.webserver", name = "helidon-webserver"}
+helidon-observer-health = { group = "io.helidon.webserver.observe", name = "helidon-webserver-observe-health"}
+helidon-media = { group = "io.helidon.http.media", name = "helidon-http-media-jsonp"}
+helidon-config = { group = "io.helidon.config", name = "helidon-config"}
+helidon-health = { group = "io.helidon.health", name = "helidon-health-checks"}
 
 jUnit-bom = { group = "org.junit", name = "junit-bom", version.ref = "jUnit" }
 jUnit-jupiter = { group = "org.junit.jupiter", name = "Function…", version.ref = "jUnit" }
@@ -23,8 +33,10 @@ mockito-core = { group = "org.mockito", name = "mockito-core", version.ref = "mo
 mockito-jupiter = { group = "org.mockito", name = "mockito-junit-jupiter", version.ref = "mockito" }
 
 [bundles]
+webServer = ["helidon-web", "helidon-media", "helidon-config", "helidon-health", "helidon-observer-health"]
 logDependencies = ["slf4j-api", "logback-core", "logback-classic"]
 testDependencies = ["jUnit-jupiter", "assertj-core", "mockito-core", "mockito-jupiter"]
 
 [plugins]
 spotless = { id = "com.diffplug.spotless", version.ref = "spotless" }
+shadow = { id = "com.github.johnrengelman.shadow", version.ref = "shadow" }

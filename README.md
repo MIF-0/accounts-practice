@@ -13,3 +13,4 @@ So it worth to spend additional time to set up thing properly, then after pay th
 - Junit, Mockito - for testing
 - logback + sel4j for logging
 - spotless to maintain same code style
+- helidon as Rest Framework
