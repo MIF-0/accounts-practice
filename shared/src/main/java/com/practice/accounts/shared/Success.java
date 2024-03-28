@@ -4,6 +4,11 @@ import java.util.Optional;
 import java.util.function.Function;
 
 public record Success<SUCCESS, FAILURE>(SUCCESS result) implements Result<SUCCESS, FAILURE> {
+
+  public static <FAILURE> Success<Void, FAILURE> successVoid() {
+    return new Success<>(null);
+  }
+
   @Override
   public boolean isSuccess() {
     return true;

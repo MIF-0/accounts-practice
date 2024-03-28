@@ -1,4 +1,4 @@
-package com.practice.accounts.account.domain;
+package com.practice.accounts.account.domain.error;
 
 public enum BalanceError {
   NOT_ENOUGH_MONEY("You have not enough money to perform this operation"),

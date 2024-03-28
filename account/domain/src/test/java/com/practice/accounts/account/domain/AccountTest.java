@@ -11,7 +11,7 @@ public class AccountTest implements MoneyFactory {
   @Test
   public void shouldReturnFailureIfCurrencyDifferentForDebit() {
     // GIVEN
-    var balance = Account.openAccountFor(Currency.getInstance("GBP"));
+    var balance = Account.openAccountFor("Name", Currency.getInstance("GBP"));
     var addition = oneUSD();
     // WHEN
     var result = balance.debit(addition);
@@ -23,7 +23,7 @@ public class AccountTest implements MoneyFactory {
   @Test
   public void shouldSuccessfullyDebitMoney() {
     // GIVEN
-    var account = Account.openAccountFor(Currency.getInstance("GBP"));
+    var account = Account.openAccountFor("Name", Currency.getInstance("GBP"));
     var addition = oneGPB();
 
     // WHEN
@@ -36,7 +36,7 @@ public class AccountTest implements MoneyFactory {
   @Test
   public void shouldReturnFailureIfCurrencyDifferentForWithdraw() {
     // GIVEN
-    var account = Account.openAccountFor(Currency.getInstance("GBP"));
+    var account = Account.openAccountFor("Name", Currency.getInstance("GBP"));
     var subtract = oneUSD();
 
     // WHEN
@@ -49,7 +49,7 @@ public class AccountTest implements MoneyFactory {
   @Test
   public void shouldSuccessfullyWithdrawMoneyWhenSameValues() {
     // GIVEN
-    var account = Account.openAccountFor(Currency.getInstance("GBP"));
+    var account = Account.openAccountFor("Name", Currency.getInstance("GBP"));
     account = account.debit(oneGPB()).successfulValue().orElseThrow();
     var subtract = oneGPB();
 
@@ -63,7 +63,7 @@ public class AccountTest implements MoneyFactory {
   @Test
   public void shouldReturnFailureIfYouTryToWithdrawMore() {
     // GIVEN
-    var account = Account.openAccountFor(Currency.getInstance("GBP"));
+    var account = Account.openAccountFor("Name", Currency.getInstance("GBP"));
     var subtract = twoGPB();
 
     // WHEN

@@ -1,5 +1,6 @@
 package com.practice.accounts.account.domain;
 
+import com.practice.accounts.account.domain.error.BalanceError;
 import com.practice.accounts.shared.Money;
 import com.practice.accounts.shared.MoneyError;
 import com.practice.accounts.shared.Result;
