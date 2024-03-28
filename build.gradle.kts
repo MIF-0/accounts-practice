@@ -37,6 +37,11 @@ subprojects {
         targetCompatibility = JavaVersion.VERSION_21
     }
 
+    tasks.test {
+        useJUnitPlatform()
+        shouldRunAfter(tasks.spotlessCheck)
+    }
+
     spotless {
         java {
             importOrder()

@@ -27,7 +27,7 @@ Behaviour: withdraw done, debit done
 
 First two operations can be sync. But the third one should be async as we are dealing with external servie
 
-DomainService: Operations 
+DomainService: Operations
 1. Register operation
 2. Consumer AccountUpdates
 DomainService: AccountManagement

@@ -1,4 +1,4 @@
-package com.practice.accounts;
+package com.practice.accounts.application;
 
 import io.helidon.config.Config;
 import io.helidon.webserver.WebServer;
