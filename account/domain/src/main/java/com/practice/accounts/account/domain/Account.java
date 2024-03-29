@@ -5,46 +5,50 @@ import com.practice.accounts.shared.AccountId;
 import com.practice.accounts.shared.Money;
 import com.practice.accounts.shared.Result;
 import com.practice.accounts.shared.Success;
+import com.practice.accounts.shared.Version;
 import java.util.Currency;
 import java.util.Objects;
 import java.util.StringJoiner;
 import java.util.function.Function;
 
 public class Account {
-  private final AccountId accountId;
+  private final AccountId id;
   private final String name;
   private final Balance balance;
-  private final int version;
+  private final Version version;
 
   public static Account openAccountFor(String name, Currency currency) {
-    return new Account(AccountId.generate(), name, Balance.emptyBalance(currency), 0);
+    return new Account(
+        AccountId.generate(), name, Balance.emptyBalance(currency), Version.createFirstVersion());
   }
 
-  private Account(AccountId accountId, String name, Balance balance, int version) {
-    this.accountId = accountId;
+  private Account(AccountId id, String name, Balance balance, Version version) {
+    this.id = id;
     this.name = name;
     this.balance = balance;
     this.version = version;
   }
 
-  public AccountId accountId() {
-    return accountId;
+  public AccountId id() {
+    return id;
+  }
+
+  public Version version() {
+    return version;
   }
 
   public Result<Account, BalanceError> withdraw(Money money) {
     var result = balance.withdraw(money);
-    var newVersion = this.version + 1;
+    var newVersion = this.version.next();
     return result.map(
-        balance -> new Success<>(new Account(accountId, name, balance, newVersion)),
-        Function.identity());
+        balance -> new Success<>(new Account(id, name, balance, newVersion)), Function.identity());
   }
 
   public Result<Account, BalanceError> debit(Money money) {
     var result = balance.debit(money);
-    var newVersion = this.version + 1;
+    var newVersion = this.version.next();
     return result.map(
-        balance -> new Success<>(new Account(accountId, name, balance, newVersion)),
-        Function.identity());
+        balance -> new Success<>(new Account(id, name, balance, newVersion)), Function.identity());
   }
 
   @Override
@@ -52,18 +56,18 @@ public class Account {
     if (this == o) return true;
     if (!(o instanceof Account account)) return false;
 
-    return Objects.equals(accountId, account.accountId);
+    return Objects.equals(id, account.id);
   }
 
   @Override
   public int hashCode() {
-    return accountId != null ? accountId.hashCode() : 0;
+    return id != null ? id.hashCode() : 0;
   }
 
   @Override
   public String toString() {
     return new StringJoiner(", ", Account.class.getSimpleName() + "[", "]")
-        .add("accountId=" + accountId)
+        .add("accountId=" + id)
         .add("name='" + name + "'")
         .add("balance=" + balance)
         .add("version=" + version)
