@@ -3,18 +3,17 @@ package com.practice.accounts.account.domain;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.practice.accounts.shared.MoneyFactory;
-import java.util.Currency;
 import org.junit.jupiter.api.Test;
 
-public class AccountTest implements MoneyFactory {
+public class AccountTest implements MoneyFactory, AccountFactory {
 
   @Test
   public void shouldReturnFailureIfCurrencyDifferentForDebit() {
     // GIVEN
-    var balance = Account.openAccountFor("Name", Currency.getInstance("GBP"));
+    var account = newGBPAccount();
     var addition = oneUSD();
     // WHEN
-    var result = balance.debit(addition);
+    var result = account.debit(addition);
 
     // THEN
     assertThat(result.isFailure()).isTrue();
@@ -23,7 +22,7 @@ public class AccountTest implements MoneyFactory {
   @Test
   public void shouldSuccessfullyDebitMoney() {
     // GIVEN
-    var account = Account.openAccountFor("Name", Currency.getInstance("GBP"));
+    var account = newGBPAccount();
     var addition = oneGPB();
 
     // WHEN
@@ -36,7 +35,7 @@ public class AccountTest implements MoneyFactory {
   @Test
   public void shouldReturnFailureIfCurrencyDifferentForWithdraw() {
     // GIVEN
-    var account = Account.openAccountFor("Name", Currency.getInstance("GBP"));
+    var account = newGBPAccount();
     var subtract = oneUSD();
 
     // WHEN
@@ -49,7 +48,7 @@ public class AccountTest implements MoneyFactory {
   @Test
   public void shouldSuccessfullyWithdrawMoneyWhenSameValues() {
     // GIVEN
-    var account = Account.openAccountFor("Name", Currency.getInstance("GBP"));
+    var account = newGBPAccount();
     account = account.debit(oneGPB()).successfulValue().orElseThrow();
     var subtract = oneGPB();
 
@@ -63,7 +62,7 @@ public class AccountTest implements MoneyFactory {
   @Test
   public void shouldReturnFailureIfYouTryToWithdrawMore() {
     // GIVEN
-    var account = Account.openAccountFor("Name", Currency.getInstance("GBP"));
+    var account = newGBPAccount();
     var subtract = twoGPB();
 
     // WHEN
