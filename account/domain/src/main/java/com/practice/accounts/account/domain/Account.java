@@ -33,6 +33,10 @@ public class Account {
     return id;
   }
 
+  public Balance balance() {
+    return balance;
+  }
+
   public Version version() {
     return version;
   }

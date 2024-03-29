@@ -26,7 +26,6 @@ public class AccountRepository implements AccountStorage {
 
   @Override
   public Result<Void, AccountStorageError> update(Account account) {
-
     var result =
         accounts.computeIfPresent(
             account.id(),
@@ -40,7 +39,9 @@ public class AccountRepository implements AccountStorage {
     if (result == null) {
       return Failed.failed(AccountStorageError.KEY_NOT_FOUND);
     }
-    if (result.version().isNotEqualTo(account.version())) {
+    // In case of success returned value from map would be same which we try to put,
+    // so the reference should be the same
+    if (result != account) {
       return Failed.failed(AccountStorageError.OPTIMISTIC_LOCKING);
     }
 

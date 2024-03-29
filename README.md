@@ -45,6 +45,7 @@ If there is a lot of concurrent requests to the same account, optimistic locking
 
 ## Library used
 - Junit, Mockito - for testing
+- jcstress - to concurrency test (you can run `./gradlew jcstress`)
 - logback + sel4j for logging
 - spotless to maintain same code style
 - helidon as Rest Framework

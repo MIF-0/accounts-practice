@@ -9,7 +9,7 @@ import java.math.BigDecimal;
 import java.util.Currency;
 import java.util.Objects;
 
-class Balance {
+public class Balance {
   // For now, we can keep as money wrapper,
   // But it quite possible that in future we would need to have it fully separated
   // as balance potentially can be negative and money not
@@ -35,6 +35,10 @@ class Balance {
   public Result<Balance, BalanceError> debit(Money money) {
     var result = this.value.add(money);
     return result.map(newBalance -> new Success<>(new Balance(newBalance)), this::fromMoneyError);
+  }
+
+  public boolean isNotEqualTo(Object that) {
+    return !this.equals(that);
   }
 
   @Override

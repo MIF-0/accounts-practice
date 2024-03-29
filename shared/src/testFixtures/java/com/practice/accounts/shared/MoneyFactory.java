@@ -19,6 +19,10 @@ public interface MoneyFactory {
     return Money.money(BigDecimal.TWO, Currency.getInstance("GBP")).successfulValue().orElseThrow();
   }
 
+  default Money tenGPB() {
+    return Money.money(BigDecimal.TEN, Currency.getInstance("GBP")).successfulValue().orElseThrow();
+  }
+
   default Money oneUSD() {
     return Money.money(BigDecimal.ONE, Currency.getInstance("USD")).successfulValue().orElseThrow();
   }
