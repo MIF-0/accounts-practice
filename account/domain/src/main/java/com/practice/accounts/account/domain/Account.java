@@ -33,6 +33,10 @@ public class Account {
     return id;
   }
 
+  public String name() {
+    return name;
+  }
+
   public Balance balance() {
     return balance;
   }

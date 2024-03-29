@@ -9,6 +9,12 @@ But I experience that usually it ends badly.
 As you mentioned production quality code, it also means maintainable and ready for a future changes.
 So it worth to spend additional time to set up thing properly, then after pay the price of coupled code.
 
+# Limitation
+This app supports for now only GPB (there is nothing wrong with supporting other currencies,
+but it would require pre-create company account), so the limitation is only on RestApi level,
+customer can't provide currency.
+
+# Domain
 Account context:
 DomainModel: Account
 Properties: id, balance
@@ -19,6 +25,7 @@ Operation context:
 DomainModel: TopUp(?)
 Properties: id, account, status, created_at,
 Behaviour: mark as done
+Money should not magically appear, they would be transfer from company account
 
 DomainModel: InternalTransfer
 Properties: id, accountFrom, accountTo, status, created_at
@@ -49,3 +56,9 @@ If there is a lot of concurrent requests to the same account, optimistic locking
 - logback + sel4j for logging
 - spotless to maintain same code style
 - helidon as Rest Framework
+
+## API example
+`http://localhost:9080/observe/health` - to observe health
+`http://localhost:9080/hello` - default
+`curl --request POST --url http://localhost:9080/account/open-account -H "Content-Type: application/json" --data '{"name":"My name"}' `
+`curl --request GET --url http://localhost:9080/account/ad52c905-d402-4f6d-a774-cc5fa0f670b3 -H "Content-Type: application/json"`

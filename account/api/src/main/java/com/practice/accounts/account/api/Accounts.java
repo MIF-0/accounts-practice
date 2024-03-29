@@ -11,9 +11,11 @@ import com.practice.accounts.account.domain.Account;
 import com.practice.accounts.account.domain.AccountStorage;
 import com.practice.accounts.account.domain.error.AccountStorageError;
 import com.practice.accounts.account.domain.error.BalanceError;
+import com.practice.accounts.shared.AccountId;
 import com.practice.accounts.shared.Failed;
 import com.practice.accounts.shared.Result;
 import com.practice.accounts.shared.Success;
+import java.util.Optional;
 
 public class Accounts {
   private final AccountStorage accountStorage;
@@ -29,6 +31,10 @@ public class Accounts {
         .map(
             success -> new Success<>(new AccountCreated(account.id(), request.id())),
             Accounts::accountsError);
+  }
+
+  public Optional<AccountInfo> retrieve(AccountId id) {
+    return accountStorage.retrieve(id).map(AccountInfo::new);
   }
 
   public Result<BalanceUpdated, AccountsError> withdrawMoneyFor(WithdrawRequest request) {

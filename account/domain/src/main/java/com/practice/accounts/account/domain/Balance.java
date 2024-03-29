@@ -8,6 +8,7 @@ import com.practice.accounts.shared.Success;
 import java.math.BigDecimal;
 import java.util.Currency;
 import java.util.Objects;
+import java.util.StringJoiner;
 
 public class Balance {
   // For now, we can keep as money wrapper,
@@ -52,6 +53,14 @@ public class Balance {
   @Override
   public int hashCode() {
     return value != null ? value.hashCode() : 0;
+  }
+
+  @Override
+  public String toString() {
+    return new StringJoiner(", ", Balance.class.getSimpleName() + "[", "]")
+        .add("currency=" + value.currency())
+        .add("value=" + value.value())
+        .toString();
   }
 
   private BalanceError fromMoneyError(MoneyError moneyError) {
