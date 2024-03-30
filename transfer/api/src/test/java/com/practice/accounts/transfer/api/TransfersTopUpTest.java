@@ -23,6 +23,7 @@ import com.practice.accounts.shared.Success;
 import com.practice.accounts.transfer.domain.Receiver;
 import com.practice.accounts.transfer.domain.TransferFactory;
 import com.practice.accounts.transfer.domain.TransferStorage;
+import com.practice.accounts.transfer.domain.WithdrawalService;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentMatcher;
 
@@ -35,7 +36,12 @@ public class TransfersTopUpTest implements MoneyFactory {
     var receiver = new Receiver(AccountId.generate());
     var transferStorage = mock(TransferStorage.class);
     var accounts = mock(Accounts.class);
-    var transfers = new Transfers(new TransferFactory(companyId), transferStorage, accounts);
+    var transfers =
+        new Transfers(
+            new TransferFactory(companyId),
+            transferStorage,
+            accounts,
+            mock(WithdrawalService.class));
     var topUpRequest = new TopUpRequest(RequestId.generate(), oneGPB(), receiver);
 
     given(transferStorage.insert(any())).willReturn(Success.successVoid());
@@ -63,7 +69,12 @@ public class TransfersTopUpTest implements MoneyFactory {
     var receiver = new Receiver(AccountId.generate());
     var transferStorage = mock(TransferStorage.class);
     var accounts = mock(Accounts.class);
-    var transfers = new Transfers(new TransferFactory(companyId), transferStorage, accounts);
+    var transfers =
+        new Transfers(
+            new TransferFactory(companyId),
+            transferStorage,
+            accounts,
+            mock(WithdrawalService.class));
     var topUpRequest = new TopUpRequest(RequestId.generate(), oneGPB(), receiver);
 
     given(transferStorage.insert(any())).willReturn(Success.successVoid());
@@ -91,7 +102,12 @@ public class TransfersTopUpTest implements MoneyFactory {
     var receiver = new Receiver(AccountId.generate());
     var transferStorage = mock(TransferStorage.class);
     var accounts = mock(Accounts.class);
-    var transfers = new Transfers(new TransferFactory(companyId), transferStorage, accounts);
+    var transfers =
+        new Transfers(
+            new TransferFactory(companyId),
+            transferStorage,
+            accounts,
+            mock(WithdrawalService.class));
     var topUpRequest = new TopUpRequest(RequestId.generate(), oneGPB(), receiver);
 
     given(transferStorage.insert(any())).willReturn(Success.successVoid());

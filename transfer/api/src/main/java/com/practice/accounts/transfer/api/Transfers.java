@@ -13,9 +13,12 @@ import com.practice.accounts.shared.Failed;
 import com.practice.accounts.shared.RequestId;
 import com.practice.accounts.shared.Result;
 import com.practice.accounts.shared.Success;
+import com.practice.accounts.transfer.domain.ExternalTransfer;
 import com.practice.accounts.transfer.domain.InternalTransfer;
+import com.practice.accounts.transfer.domain.Transfer;
 import com.practice.accounts.transfer.domain.TransferFactory;
 import com.practice.accounts.transfer.domain.TransferStorage;
+import com.practice.accounts.transfer.domain.WithdrawalService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,12 +28,19 @@ public class Transfers {
   private final TransferFactory transferFactory;
   private final TransferStorage transferStorage;
   private final Accounts accounts;
+  private final WithdrawalService externalService;
+  private final PeriodicallyChecker periodicallyChecker;
 
   public Transfers(
-      TransferFactory transferFactory, TransferStorage transferStorage, Accounts accounts) {
+      TransferFactory transferFactory,
+      TransferStorage transferStorage,
+      Accounts accounts,
+      WithdrawalService externalService) {
     this.transferFactory = transferFactory;
     this.transferStorage = transferStorage;
     this.accounts = accounts;
+    this.externalService = externalService;
+    this.periodicallyChecker = new PeriodicallyChecker(transferStorage, externalService);
   }
 
   public Result<Void, TransferError> topUp(TopUpRequest topUpRequest) {
@@ -57,6 +67,19 @@ public class Transfers {
     return result;
   }
 
+  public Result<Void, TransferError> externalTransfer(ExternalTransferRequest transferRequest) {
+    LOGGER.info("Top up request by " + transferRequest.sender().accountId());
+    var transfer =
+        transferFactory.newExternalTransfer(
+            transferRequest.money(), transferRequest.receiver(), transferRequest.sender());
+    var result = processExternalTransfer(transfer);
+    LOGGER.info(
+        "Top up finished for "
+            + transferRequest.sender().accountId()
+            + (result.isSuccess() ? " with success." : "and it failed"));
+    return result;
+  }
+
   // Ideally it should be done via events and separate consumers not to mix everything here
   private Result<Void, TransferError> processInternalTransfer(InternalTransfer transfer) {
     var insertResult = transferStorage.insert(transfer);
@@ -71,18 +94,52 @@ public class Transfers {
             transfer.money());
     var withdrawalResult = processWithdrawal(transfer, withdrawRequest);
     return switch (withdrawalResult) {
-      case Failed<InternalTransfer, TransferError> value -> Failed.failed(value.failure());
-      case Success<InternalTransfer, TransferError> value ->
-          processDebit(value.result(), withdrawRequest);
+      case Failed<Transfer, TransferError> value -> Failed.failed(value.failure());
+      case Success<Transfer, TransferError> value -> {
+        var debitRequest =
+            new DebitRequest(
+                new RequestId(transfer.id().value().toString()),
+                transfer.receiver().accountId(),
+                transfer.money());
+        yield processDebit(value.result(), debitRequest, withdrawRequest);
+      }
     };
   }
 
-  private Result<InternalTransfer, TransferError> processWithdrawal(
-      InternalTransfer transfer, WithdrawRequest withdrawRequest) {
+  private Result<Void, TransferError> processExternalTransfer(ExternalTransfer transfer) {
+    var insertResult = transferStorage.insert(transfer);
+    if (insertResult.isFailure()) {
+      return Failed.failed(TransferError.UNABLE_TO_STORE_TRANSFER);
+    }
+
+    var withdrawRequest =
+        new WithdrawRequest(
+            new RequestId(transfer.id().value().toString()),
+            transfer.sender().accountId(),
+            transfer.money());
+    var withdrawalResult = processWithdrawal(transfer, withdrawRequest);
+    return switch (withdrawalResult) {
+      case Failed<Transfer, TransferError> value -> Failed.failed(value.failure());
+      case Success<Transfer, TransferError> value ->
+          sendToExternal(value.result(), transfer.receiver());
+    };
+  }
+
+  private Result<Void, TransferError> sendToExternal(
+      Transfer transfer, WithdrawalService.Address receiver) {
+    WithdrawalService.WithdrawalId withdrawalId =
+        new WithdrawalService.WithdrawalId(transfer.id().value());
+    externalService.requestWithdrawal(withdrawalId, receiver, transfer.money());
+    periodicallyChecker.scheduleWithdrawalCheck(withdrawalId, transfer.id());
+    return Success.successVoid();
+  }
+
+  private Result<Transfer, TransferError> processWithdrawal(
+      Transfer transfer, WithdrawRequest withdrawRequest) {
     var result = accounts.withdrawMoneyFor(withdrawRequest);
     return switch (result) {
       case Failed<BalanceUpdated, AccountsError> v -> {
-        var failedTransfer = transfer.failed();
+        var failedTransfer = transfer.markAsFailed();
         if (failedTransfer.isSuccess()) {
           transferStorage.update(failedTransfer.successfulValue().orElseThrow());
         }
@@ -106,16 +163,11 @@ public class Transfers {
   }
 
   private Result<Void, TransferError> processDebit(
-      InternalTransfer transfer, WithdrawRequest withdrawRequest) {
-    var debitRequest =
-        new DebitRequest(
-            new RequestId(transfer.id().value().toString()),
-            transfer.receiver().accountId(),
-            transfer.money());
+      Transfer transfer, DebitRequest debitRequest, WithdrawRequest withdrawRequest) {
     var debitResult = accounts.debitMoneyFor(debitRequest);
     return switch (debitResult) {
       case Failed<BalanceUpdated, AccountsError> v -> {
-        var failedTransfer = transfer.failed();
+        var failedTransfer = transfer.markAsFailed();
         if (failedTransfer.isSuccess()) {
           transferStorage.update(failedTransfer.successfulValue().orElseThrow());
         }
@@ -123,7 +175,7 @@ public class Transfers {
         yield Failed.failed(mapAccountToTransferError(v.failure(), TransferError.DEBIT_FAILED));
       }
       case Success<BalanceUpdated, AccountsError> v -> {
-        var completedTransfer = transfer.done();
+        var completedTransfer = transfer.markAsDone();
         if (completedTransfer.isFailure()) {
           rollbackDebit(debitRequest);
           rollbackWithdraw(withdrawRequest);

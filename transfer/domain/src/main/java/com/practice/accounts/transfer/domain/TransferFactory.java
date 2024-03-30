@@ -17,4 +17,9 @@ public class TransferFactory {
   public InternalTransfer newInternalTransfer(Money money, Receiver receiver, Sender sender) {
     return new InternalTransfer(money, sender, receiver);
   }
+
+  public ExternalTransfer newExternalTransfer(
+      Money money, WithdrawalService.Address receiver, Sender sender) {
+    return new ExternalTransfer(money, sender, receiver);
+  }
 }

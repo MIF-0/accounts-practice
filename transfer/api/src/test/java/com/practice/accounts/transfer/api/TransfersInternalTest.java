@@ -24,6 +24,7 @@ import com.practice.accounts.transfer.domain.Receiver;
 import com.practice.accounts.transfer.domain.Sender;
 import com.practice.accounts.transfer.domain.TransferFactory;
 import com.practice.accounts.transfer.domain.TransferStorage;
+import com.practice.accounts.transfer.domain.WithdrawalService;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentMatcher;
 
@@ -37,7 +38,11 @@ public class TransfersInternalTest implements MoneyFactory {
     var transferStorage = mock(TransferStorage.class);
     var accounts = mock(Accounts.class);
     var transfers =
-        new Transfers(new TransferFactory(AccountId.generate()), transferStorage, accounts);
+        new Transfers(
+            new TransferFactory(AccountId.generate()),
+            transferStorage,
+            accounts,
+            mock(WithdrawalService.class));
     var transferRequest =
         new InternalTransferRequest(RequestId.generate(), oneGPB(), sender, receiver);
 
@@ -67,7 +72,11 @@ public class TransfersInternalTest implements MoneyFactory {
     var transferStorage = mock(TransferStorage.class);
     var accounts = mock(Accounts.class);
     var transfers =
-        new Transfers(new TransferFactory(AccountId.generate()), transferStorage, accounts);
+        new Transfers(
+            new TransferFactory(AccountId.generate()),
+            transferStorage,
+            accounts,
+            mock(WithdrawalService.class));
     var transferRequest =
         new InternalTransferRequest(RequestId.generate(), oneGPB(), sender, receiver);
 
@@ -97,7 +106,11 @@ public class TransfersInternalTest implements MoneyFactory {
     var transferStorage = mock(TransferStorage.class);
     var accounts = mock(Accounts.class);
     var transfers =
-        new Transfers(new TransferFactory(AccountId.generate()), transferStorage, accounts);
+        new Transfers(
+            new TransferFactory(AccountId.generate()),
+            transferStorage,
+            accounts,
+            mock(WithdrawalService.class));
     var transferRequest =
         new InternalTransferRequest(RequestId.generate(), oneGPB(), sender, receiver);
 

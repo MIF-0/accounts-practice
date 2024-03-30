@@ -5,22 +5,27 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.practice.accounts.shared.AccountId;
 import com.practice.accounts.shared.MoneyFactory;
 import com.practice.accounts.shared.Version;
+import java.util.UUID;
 import org.junit.jupiter.api.Test;
 
-public class InternalTransferTest implements MoneyFactory {
+public class ExternalTransferTest implements MoneyFactory {
 
   @Test
   public void shouldMarkStatusAsWithdrawDoneAndUpdateVersion() {
     // GIVEN
     var transferFactory = new TransferFactory(AccountId.generate());
-    var transfer = transferFactory.newTopUp(oneGPB(), new Receiver(AccountId.generate()));
+    var transfer =
+        transferFactory.newExternalTransfer(
+            oneGPB(),
+            new WithdrawalService.Address(UUID.randomUUID().toString()),
+            new Sender(AccountId.generate()));
 
     // WHEN
     var updatedTransfer =
-        (InternalTransfer) transfer.withdrawFinished().successfulValue().orElseThrow();
+        (ExternalTransfer) transfer.withdrawFinished().successfulValue().orElseThrow();
 
     // THEN
-    assertThat(updatedTransfer.status()).isEqualTo(InternalTransfer.Status.WITHDRAW_DONE);
+    assertThat(updatedTransfer.status()).isEqualTo(ExternalTransfer.Status.WITHDRAW_DONE);
     assertThat(updatedTransfer.version()).isEqualTo(Version.createFirstVersion().next());
   }
 
@@ -28,7 +33,11 @@ public class InternalTransferTest implements MoneyFactory {
   public void shouldFailIfAlreadyWithdrawFinished() {
     // GIVEN
     var transferFactory = new TransferFactory(AccountId.generate());
-    Transfer transfer = transferFactory.newTopUp(oneGPB(), new Receiver(AccountId.generate()));
+    Transfer transfer =
+        transferFactory.newExternalTransfer(
+            oneGPB(),
+            new WithdrawalService.Address(UUID.randomUUID().toString()),
+            new Sender(AccountId.generate()));
     transfer = transfer.withdrawFinished().successfulValue().orElseThrow();
 
     // WHEN
@@ -42,7 +51,11 @@ public class InternalTransferTest implements MoneyFactory {
   public void shouldFailIfAlreadyFinished() {
     // GIVEN
     var transferFactory = new TransferFactory(AccountId.generate());
-    Transfer transfer = transferFactory.newTopUp(oneGPB(), new Receiver(AccountId.generate()));
+    Transfer transfer =
+        transferFactory.newExternalTransfer(
+            oneGPB(),
+            new WithdrawalService.Address(UUID.randomUUID().toString()),
+            new Sender(AccountId.generate()));
     transfer = transfer.withdrawFinished().successfulValue().orElseThrow();
     transfer = transfer.markAsDone().successfulValue().orElseThrow();
 
@@ -57,22 +70,31 @@ public class InternalTransferTest implements MoneyFactory {
   public void shouldMarkStatusAsFullyDoneAndUpdateVersion() {
     // GIVEN
     var transferFactory = new TransferFactory(AccountId.generate());
-    var transfer = transferFactory.newTopUp(oneGPB(), new Receiver(AccountId.generate()));
+    var transfer =
+        transferFactory.newExternalTransfer(
+            oneGPB(),
+            new WithdrawalService.Address(UUID.randomUUID().toString()),
+            new Sender(AccountId.generate()));
     var updatedTransfer = transfer.withdrawFinished().successfulValue().orElseThrow();
 
     // WHEN
-    var finished = (InternalTransfer) updatedTransfer.markAsDone().successfulValue().orElseThrow();
+    var doneTransfer =
+        (ExternalTransfer) updatedTransfer.markAsDone().successfulValue().orElseThrow();
 
     // THEN
-    assertThat(finished.status()).isEqualTo(InternalTransfer.Status.FULLY_DONE);
-    assertThat(finished.version()).isEqualTo(Version.createFirstVersion().next().next());
+    assertThat(doneTransfer.status()).isEqualTo(ExternalTransfer.Status.FULLY_DONE);
+    assertThat(doneTransfer.version()).isEqualTo(Version.createFirstVersion().next().next());
   }
 
   @Test
   public void shouldFailIfAlreadyDone() {
     // GIVEN
     var transferFactory = new TransferFactory(AccountId.generate());
-    Transfer transfer = transferFactory.newTopUp(oneGPB(), new Receiver(AccountId.generate()));
+    Transfer transfer =
+        transferFactory.newExternalTransfer(
+            oneGPB(),
+            new WithdrawalService.Address(UUID.randomUUID().toString()),
+            new Sender(AccountId.generate()));
     transfer = transfer.withdrawFinished().successfulValue().orElseThrow();
     transfer = transfer.markAsDone().successfulValue().orElseThrow();
 
@@ -87,7 +109,11 @@ public class InternalTransferTest implements MoneyFactory {
   public void shouldNotMarkAsFullyDoneIfNew() {
     // GIVEN
     var transferFactory = new TransferFactory(AccountId.generate());
-    var transfer = transferFactory.newTopUp(oneGPB(), new Receiver(AccountId.generate()));
+    var transfer =
+        transferFactory.newExternalTransfer(
+            oneGPB(),
+            new WithdrawalService.Address(UUID.randomUUID().toString()),
+            new Sender(AccountId.generate()));
 
     // WHEN
     var updatedTransfer = transfer.markAsDone();
@@ -100,23 +126,31 @@ public class InternalTransferTest implements MoneyFactory {
   public void shouldMarkStatusAsFailed() {
     // GIVEN
     var transferFactory = new TransferFactory(AccountId.generate());
-    var transfer = transferFactory.newTopUp(oneGPB(), new Receiver(AccountId.generate()));
+    var transfer =
+        transferFactory.newExternalTransfer(
+            oneGPB(),
+            new WithdrawalService.Address(UUID.randomUUID().toString()),
+            new Sender(AccountId.generate()));
     var updatedTransfer = transfer.withdrawFinished().successfulValue().orElseThrow();
 
     // WHEN
-    var finished =
-        (InternalTransfer) updatedTransfer.markAsFailed().successfulValue().orElseThrow();
+    var failedTransfer =
+        (ExternalTransfer) updatedTransfer.markAsFailed().successfulValue().orElseThrow();
 
     // THEN
-    assertThat(finished.status()).isEqualTo(InternalTransfer.Status.FULLY_DONE);
-    assertThat(finished.version()).isEqualTo(Version.createFirstVersion().next().next());
+    assertThat(failedTransfer.status()).isEqualTo(ExternalTransfer.Status.FULLY_DONE);
+    assertThat(failedTransfer.version()).isEqualTo(Version.createFirstVersion().next().next());
   }
 
   @Test
   public void shouldFailIToMarkFailedIfAlreadyDone() {
     // GIVEN
     var transferFactory = new TransferFactory(AccountId.generate());
-    Transfer transfer = transferFactory.newTopUp(oneGPB(), new Receiver(AccountId.generate()));
+    Transfer transfer =
+        transferFactory.newExternalTransfer(
+            oneGPB(),
+            new WithdrawalService.Address(UUID.randomUUID().toString()),
+            new Sender(AccountId.generate()));
     transfer = transfer.withdrawFinished().successfulValue().orElseThrow();
     transfer = transfer.markAsDone().successfulValue().orElseThrow();
 

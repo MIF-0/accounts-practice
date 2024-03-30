@@ -2,12 +2,13 @@ package com.practice.accounts.transfer.domain;
 
 import com.practice.accounts.shared.AccountId;
 import com.practice.accounts.shared.Money;
+import com.practice.accounts.shared.Result;
 import com.practice.accounts.shared.TransferId;
 import com.practice.accounts.shared.Version;
 import java.util.Objects;
 import java.util.StringJoiner;
 
-public abstract sealed class Transfer permits InternalTransfer {
+public abstract sealed class Transfer permits ExternalTransfer, InternalTransfer {
   private final TransferId id;
   private final Money money;
   private final Version version;
@@ -31,6 +32,12 @@ public abstract sealed class Transfer permits InternalTransfer {
   }
 
   public abstract boolean belongsTo(AccountId accountId);
+
+  public abstract Result<Transfer, TransferStatusError> withdrawFinished();
+
+  public abstract Result<Transfer, TransferStatusError> markAsFailed();
+
+  public abstract Result<Transfer, TransferStatusError> markAsDone();
 
   @Override
   public boolean equals(Object o) {

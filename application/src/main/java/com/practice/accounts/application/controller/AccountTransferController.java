@@ -7,12 +7,14 @@ import com.practice.accounts.shared.Money;
 import com.practice.accounts.shared.RequestId;
 import com.practice.accounts.shared.Result;
 import com.practice.accounts.shared.Success;
+import com.practice.accounts.transfer.api.ExternalTransferRequest;
 import com.practice.accounts.transfer.api.InternalTransferRequest;
 import com.practice.accounts.transfer.api.TopUpRequest;
 import com.practice.accounts.transfer.api.TransferError;
 import com.practice.accounts.transfer.api.Transfers;
 import com.practice.accounts.transfer.domain.Receiver;
 import com.practice.accounts.transfer.domain.Sender;
+import com.practice.accounts.transfer.domain.WithdrawalService;
 import io.helidon.http.Status;
 import io.helidon.webserver.http.HttpRules;
 import io.helidon.webserver.http.HttpService;
@@ -43,6 +45,7 @@ public class AccountTransferController implements HttpService {
   public void routing(HttpRules rules) {
     rules.post("/top-up", this::topUp);
     rules.post("/internal", this::internalTransferTo);
+    rules.post("/external", this::externalTransferTo);
   }
 
   private void topUp(ServerRequest request, ServerResponse response) {
@@ -81,7 +84,7 @@ public class AccountTransferController implements HttpService {
     String accountIdStr = request.path().pathParameters().get("id");
     var requestBody = request.content().as(JsonObject.class);
     if (!requestBody.containsKey("amount") || !requestBody.containsKey("account_to")) {
-      sendBadRequest("Not all data provided. Please provide [amount]", response);
+      sendBadRequest("Not all data provided. Please provide [amount] or [account_to]", response);
       return;
     }
     var amountStr = Objects.requireNonNull(requestBody.getString("amount"));
@@ -102,6 +105,41 @@ public class AccountTransferController implements HttpService {
         new InternalTransferRequest(
             RequestId.generate(), possibleMoney.successfulValue().get(), sender, receiver);
     var result = withRetry(() -> transfers.internalTransfer(internalTransfer));
+    switch (result) {
+      case Failed<Void, TransferError> v -> {
+        response.status(Status.INTERNAL_SERVER_ERROR_500).send();
+      }
+      case Success<Void, TransferError> v -> {
+        response.status(Status.OK_200).send();
+      }
+    }
+  }
+
+  private void externalTransferTo(ServerRequest request, ServerResponse response) {
+    String accountIdStr = request.path().pathParameters().get("id");
+    var requestBody = request.content().as(JsonObject.class);
+    if (!requestBody.containsKey("amount") || !requestBody.containsKey("address_to")) {
+      sendBadRequest("Not all data provided. Please provide [amount] or [address_to]", response);
+      return;
+    }
+    var amountStr = Objects.requireNonNull(requestBody.getString("amount"));
+    var currency = limitation.supportedCurrency();
+    var amount = new BigDecimal(amountStr).setScale(2, RoundingMode.HALF_UP);
+    var possibleMoney = Money.money(amount, currency);
+
+    if (possibleMoney.isFailure()) {
+      sendBadRequest("Wrong amount", response);
+      return;
+    }
+
+    String addressTo = Objects.requireNonNull(requestBody.getString("address_to"));
+
+    var sender = new Sender(AccountId.from(accountIdStr));
+    var receiver = new WithdrawalService.Address(addressTo);
+    var externalTransfer =
+        new ExternalTransferRequest(
+            RequestId.generate(), possibleMoney.successfulValue().get(), sender, receiver);
+    var result = withRetry(() -> transfers.externalTransfer(externalTransfer));
     switch (result) {
       case Failed<Void, TransferError> v -> {
         response.status(Status.INTERNAL_SERVER_ERROR_500).send();
