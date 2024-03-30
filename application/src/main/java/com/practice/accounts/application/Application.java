@@ -2,6 +2,7 @@ package com.practice.accounts.application;
 
 import com.practice.accounts.application.configuration.AppContextConfig;
 import com.practice.accounts.application.controller.AccountController;
+import com.practice.accounts.application.controller.AccountTransferController;
 import io.helidon.config.Config;
 import io.helidon.http.media.jsonp.JsonpSupport;
 import io.helidon.webserver.WebServer;
@@ -11,14 +12,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class Application {
-  private static final Logger LOGGER = LoggerFactory.getLogger(App.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(Application.class);
 
-  private final Config config;
   private final AppContextConfig appContextConfig;
   private final WebServer webServer;
 
   public Application(Config config, AppContextConfig appContextConfig) {
-    this.config = config;
     this.appContextConfig = appContextConfig;
     this.webServer =
         WebServer.builder()
@@ -33,12 +32,17 @@ public class Application {
   }
 
   static Consumer<HttpRouting.Builder> routing(AppContextConfig config) {
-    var accountsConfig = config.accountContextConfig();
     var limitation = config.limitation();
     return routing -> {
       routing
           .get("/hello", (req, res) -> res.send("Hello World!"))
-          .register("/account", new AccountController(accountsConfig.accounts(), limitation));
+          .register(
+              "/account",
+              new AccountController(config.accountContextConfig().accounts(), limitation))
+          .register(
+              "/account/{id}/transfer",
+              new AccountTransferController(
+                  config.transfersContextConfig().transfers(), limitation));
     };
   }
 
@@ -55,12 +59,12 @@ public class Application {
 
   private void initialSetup(AppContextConfig config) {
     var accountRepo = config.accountContextConfig().accountStorage();
-    var companyAccount = config.limitation().companyAccount();
+    var companyAccount = config.limitation().initialCompanyAccount();
     var result = accountRepo.insert(companyAccount);
     if (result.isFailure()) {
       LOGGER.error("Were not able to create company account");
     } else {
-      LOGGER.info("company account created");
+      LOGGER.info("company account created with id: " + companyAccount.id());
     }
   }
 }

@@ -11,6 +11,10 @@ dependencies {
     implementation(project(":account_api"))
     implementation(project(":account_domain"))
     implementation(project(":account_external"))
+    implementation(project(":transfer_api"))
+    implementation(project(":transfer_domain"))
+    implementation(project(":transfer_external"))
+
 }
 
 application {

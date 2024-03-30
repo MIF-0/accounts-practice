@@ -3,7 +3,7 @@ plugins {
 }
 
 dependencies {
-    api(project(":shared"))
+    api(project(":transfer_domain"))
 
     testImplementation(testFixtures(project(":shared")))
 }
