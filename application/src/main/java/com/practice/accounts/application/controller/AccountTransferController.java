@@ -7,10 +7,12 @@ import com.practice.accounts.shared.Money;
 import com.practice.accounts.shared.RequestId;
 import com.practice.accounts.shared.Result;
 import com.practice.accounts.shared.Success;
+import com.practice.accounts.transfer.api.InternalTransferRequest;
 import com.practice.accounts.transfer.api.TopUpRequest;
 import com.practice.accounts.transfer.api.TransferError;
 import com.practice.accounts.transfer.api.Transfers;
 import com.practice.accounts.transfer.domain.Receiver;
+import com.practice.accounts.transfer.domain.Sender;
 import io.helidon.http.Status;
 import io.helidon.webserver.http.HttpRules;
 import io.helidon.webserver.http.HttpService;
@@ -40,6 +42,7 @@ public class AccountTransferController implements HttpService {
   @Override
   public void routing(HttpRules rules) {
     rules.post("/top-up", this::topUp);
+    rules.post("/internal", this::internalTransferTo);
   }
 
   private void topUp(ServerRequest request, ServerResponse response) {
@@ -64,6 +67,41 @@ public class AccountTransferController implements HttpService {
         new TopUpRequest(
             RequestId.generate(), possibleMoney.successfulValue().get(), new Receiver(accountId));
     var result = withRetry(() -> transfers.topUp(topUpRequest));
+    switch (result) {
+      case Failed<Void, TransferError> v -> {
+        response.status(Status.INTERNAL_SERVER_ERROR_500).send();
+      }
+      case Success<Void, TransferError> v -> {
+        response.status(Status.OK_200).send();
+      }
+    }
+  }
+
+  private void internalTransferTo(ServerRequest request, ServerResponse response) {
+    String accountIdStr = request.path().pathParameters().get("id");
+    var requestBody = request.content().as(JsonObject.class);
+    if (!requestBody.containsKey("amount") || !requestBody.containsKey("account_to")) {
+      sendBadRequest("Not all data provided. Please provide [amount]", response);
+      return;
+    }
+    var amountStr = Objects.requireNonNull(requestBody.getString("amount"));
+    var currency = limitation.supportedCurrency();
+    var amount = new BigDecimal(amountStr).setScale(2, RoundingMode.HALF_UP);
+    var possibleMoney = Money.money(amount, currency);
+
+    if (possibleMoney.isFailure()) {
+      sendBadRequest("Wrong amount", response);
+      return;
+    }
+
+    String accountTo = Objects.requireNonNull(requestBody.getString("account_to"));
+
+    var sender = new Sender(AccountId.from(accountIdStr));
+    var receiver = new Receiver(AccountId.from(accountTo));
+    var internalTransfer =
+        new InternalTransferRequest(
+            RequestId.generate(), possibleMoney.successfulValue().get(), sender, receiver);
+    var result = withRetry(() -> transfers.internalTransfer(internalTransfer));
     switch (result) {
       case Failed<Void, TransferError> v -> {
         response.status(Status.INTERNAL_SERVER_ERROR_500).send();

@@ -37,17 +37,8 @@ public class AccountTransferControllerTest {
   @Test
   public void shouldBeAbleToTopUp() throws URISyntaxException {
     // GIVEN
-    var openAccountRequest =
-        HttpRequest.newBuilder()
-            .uri(new URI("http://localhost:9080/account/open-account"))
-            .headers("Content-Type", "application/json")
-            .POST(HttpRequest.BodyPublishers.ofString("{\"name\":\"My name\"}"))
-            .build();
     try (var httpClient = HttpClient.newHttpClient()) {
-      var openResponse = httpClient.send(openAccountRequest, HttpResponse.BodyHandlers.ofString());
-      // {"account_id":"value"}
-      var accountId =
-          openResponse.body().replace("{", "").replace("}", "").replace("\"", "").split(":")[1];
+      var accountId = openAccount(httpClient);
 
       var topUpRequest =
           HttpRequest.newBuilder()
@@ -57,14 +48,64 @@ public class AccountTransferControllerTest {
               .build();
 
       // WHEN
-      var getResponse = httpClient.send(topUpRequest, HttpResponse.BodyHandlers.ofString());
+      var response = httpClient.send(topUpRequest, HttpResponse.BodyHandlers.ofString());
 
       // THEN
-      assertThat(getResponse.statusCode()).isEqualTo(200);
+      assertThat(response.statusCode()).isEqualTo(200);
     } catch (IOException e) {
       throw new RuntimeException(e);
     } catch (InterruptedException e) {
       throw new RuntimeException(e);
     }
+  }
+
+  @Test
+  public void shouldBeAbleToTransfer() throws URISyntaxException {
+    try (var httpClient = HttpClient.newHttpClient()) {
+      // GIVEN
+      var sender = openAccount(httpClient);
+      var receiver = openAccount(httpClient);
+
+      var topUpRequest =
+          HttpRequest.newBuilder()
+              .uri(new URI("http://localhost:9080/account/" + sender + "/transfer/top-up"))
+              .headers("Content-Type", "application/json")
+              .POST(HttpRequest.BodyPublishers.ofString("{\"amount\":\"300\"}"))
+              .build();
+      var topUpResponse = httpClient.send(topUpRequest, HttpResponse.BodyHandlers.ofString());
+      assertThat(topUpResponse.statusCode()).isEqualTo(200);
+
+      var transferRequest =
+          HttpRequest.newBuilder()
+              .uri(new URI("http://localhost:9080/account/" + sender + "/transfer/internal"))
+              .headers("Content-Type", "application/json")
+              .POST(
+                  HttpRequest.BodyPublishers.ofString(
+                      "{\"amount\":\"300\", \"account_to\":\"" + receiver + "\"}"))
+              .build();
+      // WHEN
+      var transferResponse = httpClient.send(transferRequest, HttpResponse.BodyHandlers.ofString());
+      // THEN
+      assertThat(transferResponse.statusCode()).isEqualTo(200);
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    } catch (InterruptedException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  private static String openAccount(HttpClient httpClient)
+      throws URISyntaxException, IOException, InterruptedException {
+    var openAccountRequest =
+        HttpRequest.newBuilder()
+            .uri(new URI("http://localhost:9080/account/open-account"))
+            .headers("Content-Type", "application/json")
+            .POST(HttpRequest.BodyPublishers.ofString("{\"name\":\"My name\"}"))
+            .build();
+    var openResponse = httpClient.send(openAccountRequest, HttpResponse.BodyHandlers.ofString());
+    // {"account_id":"value"}
+    var accountId =
+        openResponse.body().replace("{", "").replace("}", "").replace("\"", "").split(":")[1];
+    return accountId;
   }
 }

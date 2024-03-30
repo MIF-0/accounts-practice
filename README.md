@@ -15,12 +15,15 @@ Why it is better? because in real world there is not a lot of concurrent request
 If there is a lot of concurrent requests to the same account, optimistic locking can do more harm, as it would mean more retries.
 
 Try to use approach with returning result instead of throwing errors (I tried different possibilities, so sorry for inconsistency)
+Generally speaking I like it more as it makes API more clear, but with Java it is much harder to implement
 
 # Limitation
 This app supports for now only GPB (there is nothing wrong with supporting other currencies,
 but it would require pre-create company account), so the limitation is only on RestApi level,
 customer can't provide currency.
-Not all test written but I tried to cover main things
+Not all test written but I tried to cover main things.
+There is some duplication and generally a lot of improvement can be done,
+especially with events (which should be used, but they are not in this implementation)
 
 # Domain
 Domain models are immutable, which help us to worry less about concurrent access to the same object
@@ -66,5 +69,6 @@ DomainService: Accounts
 `http://localhost:9080/observe/health` - to observe health
 `http://localhost:9080/hello` - default
 `curl --request POST --url http://localhost:9080/account/open-account -H "Content-Type: application/json" --data '{"name":"My name"}'`
-`curl --request GET --url http://localhost:9080/account/31db59a1-a59d-4eea-beb0-cde6d43042be -H "Content-Type: application/json"`
-`curl --request POST --url http://localhost:9080/account/31db59a1-a59d-4eea-beb0-cde6d43042be/transfer/top-up -H "Content-Type: application/json" --data '{"amount":"100"}'`
+`curl --request GET --url http://localhost:9080/account/95fa17df-8d41-44e4-94c5-178f93d7858f -H "Content-Type: application/json"`
+`curl --request POST --url http://localhost:9080/account/95fa17df-8d41-44e4-94c5-178f93d7858f/transfer/top-up -H "Content-Type: application/json" --data '{"amount":"100"}'`
+`curl --request POST --url http://localhost:9080/account/95fa17df-8d41-44e4-94c5-178f93d7858f/transfer/internal -H "Content-Type: application/json" --data '{"amount":"100", "account_to":"c70baed6-1ec0-4549-9e19-924820023c11"}'`

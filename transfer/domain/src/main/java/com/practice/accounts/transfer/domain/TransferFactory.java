@@ -13,4 +13,8 @@ public class TransferFactory {
   public InternalTransfer newTopUp(Money money, Receiver receiver) {
     return new InternalTransfer(money, new Sender(companyId), receiver);
   }
+
+  public InternalTransfer newInternalTransfer(Money money, Receiver receiver, Sender sender) {
+    return new InternalTransfer(money, sender, receiver);
+  }
 }

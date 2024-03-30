@@ -44,6 +44,19 @@ public class Transfers {
     return result;
   }
 
+  public Result<Void, TransferError> internalTransfer(InternalTransferRequest transferRequest) {
+    LOGGER.info("Top up request by " + transferRequest.sender().accountId());
+    var transfer =
+        transferFactory.newInternalTransfer(
+            transferRequest.money(), transferRequest.receiver(), transferRequest.sender());
+    var result = processInternalTransfer(transfer);
+    LOGGER.info(
+        "Top up finished for "
+            + transferRequest.sender().accountId()
+            + (result.isSuccess() ? " with success." : "and it failed"));
+    return result;
+  }
+
   // Ideally it should be done via events and separate consumers not to mix everything here
   private Result<Void, TransferError> processInternalTransfer(InternalTransfer transfer) {
     var insertResult = transferStorage.insert(transfer);
@@ -112,15 +125,15 @@ public class Transfers {
       case Success<BalanceUpdated, AccountsError> v -> {
         var completedTransfer = transfer.done();
         if (completedTransfer.isFailure()) {
-          rollbackWithdraw(withdrawRequest);
           rollbackDebit(debitRequest);
+          rollbackWithdraw(withdrawRequest);
           yield Failed.failed(TransferError.UNABLE_TO_STORE_TRANSFER);
         }
         var updateFullResult =
             transferStorage.update(completedTransfer.successfulValue().orElseThrow());
         if (updateFullResult.isFailure()) {
-          rollbackWithdraw(withdrawRequest);
           rollbackDebit(debitRequest);
+          rollbackWithdraw(withdrawRequest);
           yield Failed.failed(TransferError.UNABLE_TO_STORE_TRANSFER);
         }
         yield Success.successVoid();
