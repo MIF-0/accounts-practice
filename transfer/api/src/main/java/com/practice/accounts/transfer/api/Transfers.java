@@ -9,6 +9,7 @@ import com.practice.accounts.account.api.error.AccountNotFound;
 import com.practice.accounts.account.api.error.AccountsError;
 import com.practice.accounts.account.api.error.TooManyOperationWithinAccount;
 import com.practice.accounts.account.api.event.BalanceUpdated;
+import com.practice.accounts.shared.AccountId;
 import com.practice.accounts.shared.Failed;
 import com.practice.accounts.shared.RequestId;
 import com.practice.accounts.shared.Result;
@@ -18,7 +19,9 @@ import com.practice.accounts.transfer.domain.InternalTransfer;
 import com.practice.accounts.transfer.domain.Transfer;
 import com.practice.accounts.transfer.domain.TransferFactory;
 import com.practice.accounts.transfer.domain.TransferStorage;
+import com.practice.accounts.transfer.domain.TransferView;
 import com.practice.accounts.transfer.domain.WithdrawalService;
+import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -78,6 +81,10 @@ public class Transfers {
             + transferRequest.sender().accountId()
             + (result.isSuccess() ? " with success." : "and it failed"));
     return result;
+  }
+
+  public List<TransferView> transfersFor(AccountId accountId) {
+    return transferStorage.retrieveFor(accountId).stream().map(TransferView::new).toList();
   }
 
   // Ideally it should be done via events and separate consumers not to mix everything here

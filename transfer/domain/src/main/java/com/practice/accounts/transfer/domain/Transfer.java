@@ -31,6 +31,8 @@ public abstract sealed class Transfer permits ExternalTransfer, InternalTransfer
     return version;
   }
 
+  abstract Status status();
+
   public abstract boolean belongsTo(AccountId accountId);
 
   public abstract Result<Transfer, TransferStatusError> withdrawFinished();
@@ -59,5 +61,12 @@ public abstract sealed class Transfer permits ExternalTransfer, InternalTransfer
         .add("money=" + money)
         .add("version=" + version)
         .toString();
+  }
+
+  public enum Status {
+    NEW,
+    WITHDRAW_DONE,
+    FULLY_DONE,
+    FAILED,
   }
 }

@@ -13,8 +13,12 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class PeriodicallyChecker {
+  private static final Logger LOGGER = LoggerFactory.getLogger(Transfers.class);
+
   private static final int FETCH_INTERVAL = 1_000;
   private final ScheduledExecutorService executorService;
   private final TransferStorage transferStorage;
@@ -32,6 +36,7 @@ public class PeriodicallyChecker {
     var future =
         executorService.scheduleAtFixedRate(
             () -> {
+              LOGGER.info("Checking: " + withdrawalId.value());
               var result = externalService.getRequestState(withdrawalId);
               switch (result) {
                 case COMPLETED -> {
@@ -44,6 +49,7 @@ public class PeriodicallyChecker {
                     transferStorage.update(transferUpdate.successfulValue().orElseThrow());
                   }
                   scheduled.get(withdrawalId).cancel(false);
+                  LOGGER.info("Canceling because it is completed: " + withdrawalId.value());
                 }
                 case FAILED -> {
                   var transferUpdate =
@@ -55,6 +61,7 @@ public class PeriodicallyChecker {
                     transferStorage.update(transferUpdate.successfulValue().orElseThrow());
                   }
                   scheduled.get(withdrawalId).cancel(false);
+                  LOGGER.info("Canceling because it is failed: " + withdrawalId.value());
                 }
               }
             },

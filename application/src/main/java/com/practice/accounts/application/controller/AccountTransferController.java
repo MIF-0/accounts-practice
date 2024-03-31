@@ -21,6 +21,7 @@ import io.helidon.webserver.http.HttpService;
 import io.helidon.webserver.http.ServerRequest;
 import io.helidon.webserver.http.ServerResponse;
 import jakarta.json.Json;
+import jakarta.json.JsonArrayBuilder;
 import jakarta.json.JsonBuilderFactory;
 import jakarta.json.JsonObject;
 import java.math.BigDecimal;
@@ -46,6 +47,7 @@ public class AccountTransferController implements HttpService {
     rules.post("/top-up", this::topUp);
     rules.post("/internal", this::internalTransferTo);
     rules.post("/external", this::externalTransferTo);
+    rules.get("/", this::transfersFor);
   }
 
   private void topUp(ServerRequest request, ServerResponse response) {
@@ -148,6 +150,18 @@ public class AccountTransferController implements HttpService {
         response.status(Status.OK_200).send();
       }
     }
+  }
+
+  private void transfersFor(ServerRequest request, ServerResponse response) {
+    String id = request.path().pathParameters().get("id");
+    var accountId = AccountId.from(id);
+    var result = transfers.transfersFor(accountId);
+    JsonArrayBuilder jsonArrayBuilder = JSON.createArrayBuilder();
+    for (var transfer : result) {
+      jsonArrayBuilder.add(transfer.toString());
+    }
+    JsonObject returnObject = JSON.createObjectBuilder().add("transfers", jsonArrayBuilder).build();
+    response.send(returnObject);
   }
 
   private Result<Void, TransferError> withRetry(Supplier<Result<Void, TransferError>> task) {

@@ -70,11 +70,4 @@ public final class InternalTransfer extends Transfer {
   public boolean belongsTo(AccountId accountId) {
     return sender.accountId().equals(accountId) || receiver.accountId().equals(accountId);
   }
-
-  enum Status {
-    NEW,
-    WITHDRAW_DONE,
-    FULLY_DONE,
-    FAILED,
-  }
 }

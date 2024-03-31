@@ -21,9 +21,10 @@ Generally speaking I like it more as it makes API more clear, but with Java it i
 This app supports for now only GPB (there is nothing wrong with supporting other currencies,
 but it would require pre-create company account), so the limitation is only on RestApi level,
 customer can't provide currency.
-Not all test written but I tried to cover main things.
+Not all test written, but I tried to cover main things.
 There is some duplication and generally a lot of improvement can be done,
 especially with events (which should be used, but they are not in this implementation)
+Didn't have enough time to properly think transfers through
 
 # Domain
 Domain models are immutable, which help us to worry less about concurrent access to the same object
@@ -72,3 +73,6 @@ DomainService: Accounts
 `curl --request GET --url http://localhost:9080/account/95fa17df-8d41-44e4-94c5-178f93d7858f -H "Content-Type: application/json"`
 `curl --request POST --url http://localhost:9080/account/95fa17df-8d41-44e4-94c5-178f93d7858f/transfer/top-up -H "Content-Type: application/json" --data '{"amount":"100"}'`
 `curl --request POST --url http://localhost:9080/account/95fa17df-8d41-44e4-94c5-178f93d7858f/transfer/internal -H "Content-Type: application/json" --data '{"amount":"100", "account_to":"c70baed6-1ec0-4549-9e19-924820023c11"}'`
+`curl --request POST --url http://localhost:9080/account/95fa17df-8d41-44e4-94c5-178f93d7858f/transfer/external -H "Content-Type: application/json" --data '{"amount":"100", "address_to":"some_address"}'`
+`curl --request GET --url http://localhost:9080/account/946871e7-2ee0-47dc-b829-290440aa8cca/transfer -H "Content-Type: application/json"
+`
