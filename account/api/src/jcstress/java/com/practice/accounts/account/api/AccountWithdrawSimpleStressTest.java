@@ -78,16 +78,16 @@ public class AccountWithdrawSimpleStressTest implements AccountFactory, MoneyFac
   private int convertResult(Result<BalanceUpdated, AccountsError> result) {
     return switch (result) {
       case Failed<BalanceUpdated, AccountsError> v -> mapError(v.failure());
-      case Success<BalanceUpdated, AccountsError> v -> SUCCESS;
+      case Success<BalanceUpdated, AccountsError> ignored -> SUCCESS;
     };
   }
 
   private int mapError(AccountsError error) {
     return switch (error) {
-      case AccountBalanceError accountBalanceError -> BALANCE_ERROR;
-      case AccountDuplicate accountDuplicate -> DUPLiCATE;
-      case AccountNotFound accountNotFound -> ACCOUNT_NOT_FOUND;
-      case TooManyOperationWithinAccount tooManyOperationWithinAccount -> TOO_MANY_OPERATIONS;
+      case AccountBalanceError ignored -> BALANCE_ERROR;
+      case AccountDuplicate ignored -> DUPLiCATE;
+      case AccountNotFound ignored -> ACCOUNT_NOT_FOUND;
+      case TooManyOperationWithinAccount ignored -> TOO_MANY_OPERATIONS;
     };
   }
 

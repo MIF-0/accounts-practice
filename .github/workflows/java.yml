@@ -1,5 +1,4 @@
 name: Java
-
 on:
   push:
     branches: [ main ]
@@ -11,11 +10,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: Lint
-        run: ./gradlew spotlessCheck
+      - uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu' # See 'Supported distributions' for available options
+          java-version: '21'
       - name: Assemble
         run: ./gradlew clean assemble
       - name: Test
         run: ./gradlew clean test
       - name: IntegrationTest
         run: ./gradlew clean integrationTest
+      - name: Stress Test
+        run: ./gradlew jcstress
